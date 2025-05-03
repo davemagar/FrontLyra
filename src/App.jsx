@@ -4,6 +4,8 @@ import Home from './pages/Home';
 import BatchWorker from './pages/BatchWorker';
 import OnDemand from './pages/OnDemand';
 import AssistantButton from './components/AssistantButton';
+import Designer from './pages/Designer';
+
 
 function App() {
   return (
@@ -12,6 +14,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/batch" element={<BatchWorker />} />
         <Route path="/ondemand" element={<OnDemand />} />
+        <Route path="/designer" element={<Designer />} />
       </Routes>
       <AssistantButton />
     </MainLayout>
