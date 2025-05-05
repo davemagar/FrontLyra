@@ -1,126 +1,195 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-const TablaEditorModal = ({ selectedTable, onClose, onSave }) => {
-  const [type, setType] = useState('standard');
-  const [rows, setRows] = useState([]);
-  const [cellStyles, setCellStyles] = useState({});
+const TablaEditorModal = ({ tableData, onSave, onClose }) => {
+  const [localTable, setLocalTable] = useState(tableData);
+  const [unit, setUnit] = useState('cm');
+  const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 });
 
-  useEffect(() => {
-    if (selectedTable) {
-      setType(selectedTable.tableType || 'standard');
-      setRows(selectedTable.rows || [['']]);
-      setCellStyles(selectedTable.cellStyles || {});
-    }
-  }, [selectedTable]);
+  const handleChange = (rowIndex, colIndex, value) => {
+    const updated = [...localTable.rows];
+    updated[rowIndex][colIndex] = value;
+    setLocalTable({ ...localTable, rows: updated });
+  };
 
   const addRow = () => {
-    const newRow = Array(rows[0]?.length || 1).fill('');
-    setRows([...rows, newRow]);
+    const newRow = Array(localTable.rows[0].length).fill('');
+    setLocalTable({ ...localTable, rows: [...localTable.rows, newRow] });
   };
 
   const addColumn = () => {
-    setRows(rows.map(row => [...row, '']));
+    const updated = localTable.rows.map(row => [...row, '']);
+    setLocalTable({ ...localTable, rows: updated });
   };
 
-  const updateCell = (r, c, value) => {
-    const updated = [...rows];
-    updated[r][c] = value;
-    setRows(updated);
+  const getCurrentStyle = () => {
+    const { row, col } = selectedCell;
+    return localTable.styles?.[row]?.[col] || {};
   };
 
-  const updateStyle = (r, c, key, value) => {
-    const keyId = `${r}-${c}`;
-    setCellStyles({
-      ...cellStyles,
-      [keyId]: {
-        ...cellStyles[keyId],
-        [key]: value,
-      },
-    });
+  const handleResize = (dimension, value) => {
+    const { row, col } = selectedCell;
+    const newStyles = { ...localTable.styles };
+    if (!newStyles[row]) newStyles[row] = {};
+    if (!newStyles[row][col]) newStyles[row][col] = {};
+
+    let numericValue = parseFloat(value);
+    if (unit === 'cm') numericValue *= 37.8;
+    if (unit === 'in') numericValue *= 96;
+
+    newStyles[row][col][dimension] = `${numericValue}px`;
+    setLocalTable({ ...localTable, styles: newStyles });
   };
 
-  const handleSave = () => {
-    onSave({
-      ...selectedTable,
-      tableType: type,
-      rows,
-      cellStyles,
-    });
-    onClose();
+  const handleRowTypeChange = (type) => {
+    const { row } = selectedCell;
+    const updated = { ...localTable.rowTypes } || {};
+    if (!updated[row]) updated[row] = {};
+    updated[row].type = type;
+    setLocalTable({ ...localTable, rowTypes: updated });
   };
+
+  const handleAlignChange = (alignType, value) => {
+    const { row } = selectedCell;
+    const updated = { ...localTable.rowTypes } || {};
+    if (!updated[row]) updated[row] = {};
+    updated[row][alignType] = value;
+    setLocalTable({ ...localTable, rowTypes: updated });
+  };
+
+  const handleColorChange = (color) => {
+    const { row, col } = selectedCell;
+    const updated = { ...localTable.styles };
+    if (!updated[row]) updated[row] = {};
+    if (!updated[row][col]) updated[row][col] = {};
+    updated[row][col].bgColor = color;
+    setLocalTable({ ...localTable, styles: updated });
+  };
+
+  const currentCellStyle = getCurrentStyle();
+  const currentRowType = localTable.rowTypes?.[selectedCell.row] || {};
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded shadow-lg w-[90%] max-w-4xl max-h-[90%] overflow-y-auto">
-        <h2 className="text-lg font-bold mb-4">Editar tabla</h2>
-
-        <div className="mb-4">
-          <label className="block text-sm font-semibold mb-1">Tipo de tabla</label>
-          <select value={type} onChange={(e) => setType(e.target.value)} className="border px-3 py-1 rounded w-full">
-            <option value="standard">Estándar</option>
-            <option value="repetitive">Repetitiva</option>
-            <option value="header">Encabezado</option>
-            <option value="footer">Pie de página</option>
-          </select>
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 overflow-y-auto">
+      <div className="bg-white p-6 rounded shadow w-[90%] max-w-6xl flex gap-4">
+        <div className="flex-1">
+          <h2 className="text-lg font-bold mb-4">Editor de Tabla</h2>
+          <div className="mb-4">
+            <span className="mr-4 font-semibold">Unidad:</span>
+            <label><input type="radio" value="px" checked={unit === 'px'} onChange={() => setUnit('px')} /> Pixeles</label>
+            <label className="ml-4"><input type="radio" value="cm" checked={unit === 'cm'} onChange={() => setUnit('cm')} /> Centímetros</label>
+            <label className="ml-4"><input type="radio" value="in" checked={unit === 'in'} onChange={() => setUnit('in')} /> Pulgadas</label>
+          </div>
+          <table className="border border-gray-400 w-full mb-4 text-sm">
+            <tbody>
+              {localTable.rows.map((row, rowIdx) => (
+                <tr key={rowIdx}>
+                  {row.map((cell, colIdx) => {
+                    const style = localTable.styles?.[rowIdx]?.[colIdx] || {};
+                    const isSelected = selectedCell.row === rowIdx && selectedCell.col === colIdx;
+                    return (
+                      <td
+                        key={colIdx}
+                        className={`border p-1 align-top ${isSelected ? 'ring-2 ring-blue-400' : ''}`}
+                        onClick={() => setSelectedCell({ row: rowIdx, col: colIdx })}
+                        style={{ backgroundColor: style.bgColor || 'transparent' }}
+                      >
+                        <textarea
+                          value={cell}
+                          onChange={(e) => handleChange(rowIdx, colIdx, e.target.value)}
+                          className="w-full h-20 resize-none border rounded p-1 bg-white"
+                        />
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="flex gap-3">
+            <button onClick={addRow} className="px-3 py-1 bg-green-500 text-white rounded">
+              Agregar Fila
+            </button>
+            <button onClick={addColumn} className="px-3 py-1 bg-blue-500 text-white rounded">
+              Agregar Columna
+            </button>
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <button onClick={onClose} className="px-4 py-2 bg-gray-400 text-white rounded">
+              Cancelar
+            </button>
+            <button onClick={() => onSave(localTable)} className="px-4 py-2 bg-yellow-500 text-white rounded">
+              Guardar
+            </button>
+          </div>
         </div>
 
-        <table className="table-auto border w-full mb-4">
-          <tbody>
-            {rows.map((row, r) => (
-              <tr key={r}>
-                {row.map((cell, c) => {
-                  const styles = cellStyles[`${r}-${c}`] || {};
-                  return (
-                    <td key={c} className="border p-2 align-top">
-                      <input
-                        type="text"
-                        value={cell}
-                        onChange={(e) => updateCell(r, c, e.target.value)}
-                        className="border w-full mb-1 px-2 py-1 text-sm"
-                      />
-                      <div className="grid grid-cols-2 gap-1 text-xs text-gray-600">
-                        <select value={styles.textAlign || 'left'} onChange={(e) => updateStyle(r, c, 'textAlign', e.target.value)} className="border px-1 py-1 rounded">
-                          <option value="left">Izq</option>
-                          <option value="center">Centro</option>
-                          <option value="right">Der</option>
-                        </select>
-                        <select value={styles.verticalAlign || 'top'} onChange={(e) => updateStyle(r, c, 'verticalAlign', e.target.value)} className="border px-1 py-1 rounded">
-                          <option value="top">Arriba</option>
-                          <option value="middle">Medio</option>
-                          <option value="bottom">Abajo</option>
-                        </select>
-                        <input
-                          type="number"
-                          placeholder="Ancho"
-                          value={styles.width || ''}
-                          onChange={(e) => updateStyle(r, c, 'width', e.target.value)}
-                          className="col-span-1 border px-1 py-1 rounded"
-                        />
-                        <input
-                          type="number"
-                          placeholder="Alto"
-                          value={styles.height || ''}
-                          onChange={(e) => updateStyle(r, c, 'height', e.target.value)}
-                          className="col-span-1 border px-1 py-1 rounded"
-                        />
-                      </div>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div className="flex gap-3 mb-4">
-          <button onClick={addRow} className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">+ Fila</button>
-          <button onClick={addColumn} className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">+ Columna</button>
-        </div>
-
-        <div className="flex justify-end space-x-2">
-          <button onClick={onClose} className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancelar</button>
-          <button onClick={handleSave} className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-400">Guardar</button>
+        <div className="w-60 border-l pl-4 text-sm">
+          <h3 className="font-semibold mb-2">Celda seleccionada</h3>
+          <div className="mb-3">
+            <label className="block mb-1">Tipo de fila</label>
+            <select
+              value={currentRowType.type || 'standard'}
+              onChange={(e) => handleRowTypeChange(e.target.value)}
+              className="w-full border p-1"
+            >
+              <option value="standard">Estándar</option>
+              <option value="header">Encabezado</option>
+              <option value="footer">Pie</option>
+              <option value="repetitive">Repetitiva</option>
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="block mb-1">Color de fondo</label>
+            <input
+              type="color"
+              value={currentCellStyle.bgColor || '#ffffff'}
+              onChange={(e) => handleColorChange(e.target.value)}
+              className="w-full h-8"
+            />
+          </div>
+          <div className="mb-3">
+            <label className="block mb-1">Alineación horizontal</label>
+            <select
+              value={currentRowType.hAlign || 'left'}
+              onChange={(e) => handleAlignChange('hAlign', e.target.value)}
+              className="w-full border p-1"
+            >
+              <option value="left">Izquierda</option>
+              <option value="center">Centro</option>
+              <option value="right">Derecha</option>
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="block mb-1">Alineación vertical</label>
+            <select
+              value={currentRowType.vAlign || 'top'}
+              onChange={(e) => handleAlignChange('vAlign', e.target.value)}
+              className="w-full border p-1"
+            >
+              <option value="top">Arriba</option>
+              <option value="middle">Centro</option>
+              <option value="bottom">Abajo</option>
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="block mb-1">Ancho ({unit})</label>
+            <input
+              type="number"
+              placeholder="Ancho"
+              onChange={(e) => handleResize('width', e.target.value)}
+              className="w-full border p-1"
+            />
+          </div>
+          <div className="mb-3">
+            <label className="block mb-1">Alto ({unit})</label>
+            <input
+              type="number"
+              placeholder="Alto"
+              onChange={(e) => handleResize('height', e.target.value)}
+              className="w-full border p-1"
+            />
+          </div>
         </div>
       </div>
     </div>

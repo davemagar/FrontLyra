@@ -7,6 +7,10 @@ const WelcomeWizard = ({ onSelect }) => {
     { label: "Insertar tabla", icon: "📊", value: "table" }
   ];
 
+  const handleSelect = (type) => {
+    onSelect(type);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center text-center h-full text-gray-700">
       <div className="bg-white rounded-lg p-8 shadow-md border">
@@ -16,7 +20,7 @@ const WelcomeWizard = ({ onSelect }) => {
           {opciones.map((op, idx) => (
             <button
               key={idx}
-              onClick={() => onSelect(op.value)}
+              onClick={() => handleSelect(op.value)}
               className="flex flex-col items-center justify-center bg-yellow-100 hover:bg-yellow-200 rounded-lg px-4 py-3 transition text-sm"
             >
               <span className="text-2xl mb-1">{op.icon}</span>
