@@ -27,18 +27,20 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
     return localTable.styles?.[row]?.[col] || {};
   };
 
-  const handleResize = (dimension, value) => {
+  const updateStyle = (property, value) => {
     const { row, col } = selectedCell;
     const newStyles = { ...localTable.styles };
     if (!newStyles[row]) newStyles[row] = {};
     if (!newStyles[row][col]) newStyles[row][col] = {};
+    newStyles[row][col][property] = value;
+    setLocalTable({ ...localTable, styles: newStyles });
+  };
 
+  const handleResize = (dimension, value) => {
     let numericValue = parseFloat(value);
     if (unit === 'cm') numericValue *= 37.8;
     if (unit === 'in') numericValue *= 96;
-
-    newStyles[row][col][dimension] = `${numericValue}px`;
-    setLocalTable({ ...localTable, styles: newStyles });
+    updateStyle(dimension, `${numericValue}px`);
   };
 
   const handleRowTypeChange = (type) => {
@@ -58,15 +60,10 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
   };
 
   const handleColorChange = (color) => {
-    const { row, col } = selectedCell;
-    const updated = { ...localTable.styles };
-    if (!updated[row]) updated[row] = {};
-    if (!updated[row][col]) updated[row][col] = {};
-    updated[row][col].bgColor = color;
-    setLocalTable({ ...localTable, styles: updated });
+    updateStyle('bgColor', color);
   };
 
-  const currentCellStyle = getCurrentStyle();
+  const currentStyle = getCurrentStyle();
   const currentRowType = localTable.rowTypes?.[selectedCell.row] || {};
 
   return (
@@ -98,6 +95,10 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
                           value={cell}
                           onChange={(e) => handleChange(rowIdx, colIdx, e.target.value)}
                           className="w-full h-20 resize-none border rounded p-1 bg-white"
+                          style={{
+                            fontFamily: style.fontFamily || 'inherit',
+                            fontSize: style.fontSize || 'inherit'
+                          }}
                         />
                       </td>
                     );
@@ -124,7 +125,7 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
           </div>
         </div>
 
-        <div className="w-60 border-l pl-4 text-sm">
+        <div className="w-64 border-l pl-4 text-sm">
           <h3 className="font-semibold mb-2">Celda seleccionada</h3>
           <div className="mb-3">
             <label className="block mb-1">Tipo de fila</label>
@@ -140,10 +141,34 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
             </select>
           </div>
           <div className="mb-3">
+            <label className="block mb-1">Fuente</label>
+            <select
+              value={currentStyle.fontFamily || ''}
+              onChange={(e) => updateStyle('fontFamily', e.target.value)}
+              className="w-full border p-1"
+            >
+              <option value="">Por defecto</option>
+              <option value="Arial">Arial</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Georgia">Georgia</option>
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="block mb-1">Tamaño de texto (px)</label>
+            <input
+              type="number"
+              value={parseInt(currentStyle.fontSize) || ''}
+              onChange={(e) => updateStyle('fontSize', `${e.target.value}px`)}
+              className="w-full border p-1"
+            />
+          </div>
+          <div className="mb-3">
             <label className="block mb-1">Color de fondo</label>
             <input
               type="color"
-              value={currentCellStyle.bgColor || '#ffffff'}
+              value={currentStyle.bgColor || '#ffffff'}
               onChange={(e) => handleColorChange(e.target.value)}
               className="w-full h-8"
             />

@@ -122,7 +122,7 @@ const Designer = () => {
       }}>
         {elements.map(el => (
           el.type === 'table'
-            ? <ResizableTableHandler key={el.id} el={el} selected={selected} setSelected={setSelected} elements={elements} setElements={setElements} onDoubleClickEdit={triggerEditor} />
+            ? <ResizableTableHandler key={el.id} el={el} selected={selected} setSelected={setSelected} elements={elements} setElements={setElements} onDoubleClick={triggerEditor} />
             : <div
                 key={el.id}
                 onClick={() => setSelected(el.id)}
