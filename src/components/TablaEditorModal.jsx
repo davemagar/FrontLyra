@@ -63,6 +63,10 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
     updateStyle('bgColor', color);
   };
 
+  const handleFontColorChange = (color) => {
+    updateStyle('fontColor', color);
+  };
+
   const currentStyle = getCurrentStyle();
   const currentRowType = localTable.rowTypes?.[selectedCell.row] || {};
 
@@ -97,7 +101,11 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
                           className="w-full h-20 resize-none border rounded p-1 bg-white"
                           style={{
                             fontFamily: style.fontFamily || 'inherit',
-                            fontSize: style.fontSize || 'inherit'
+                            fontSize: style.fontSize || 'inherit',
+                            fontWeight: style.fontWeight || 'normal',
+                            fontStyle: style.fontStyle || 'normal',
+                            textDecoration: style.textDecoration || 'none',
+                            color: style.fontColor || 'inherit'
                           }}
                         />
                       </td>
@@ -108,20 +116,12 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
             </tbody>
           </table>
           <div className="flex gap-3">
-            <button onClick={addRow} className="px-3 py-1 bg-green-500 text-white rounded">
-              Agregar Fila
-            </button>
-            <button onClick={addColumn} className="px-3 py-1 bg-blue-500 text-white rounded">
-              Agregar Columna
-            </button>
+            <button onClick={addRow} className="px-3 py-1 bg-green-500 text-white rounded">Agregar Fila</button>
+            <button onClick={addColumn} className="px-3 py-1 bg-blue-500 text-white rounded">Agregar Columna</button>
           </div>
           <div className="mt-4 flex justify-end gap-2">
-            <button onClick={onClose} className="px-4 py-2 bg-gray-400 text-white rounded">
-              Cancelar
-            </button>
-            <button onClick={() => onSave(localTable)} className="px-4 py-2 bg-yellow-500 text-white rounded">
-              Guardar
-            </button>
+            <button onClick={onClose} className="px-4 py-2 bg-gray-400 text-white rounded">Cancelar</button>
+            <button onClick={() => onSave(localTable)} className="px-4 py-2 bg-yellow-500 text-white rounded">Guardar</button>
           </div>
         </div>
 
@@ -129,11 +129,7 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
           <h3 className="font-semibold mb-2">Celda seleccionada</h3>
           <div className="mb-3">
             <label className="block mb-1">Tipo de fila</label>
-            <select
-              value={currentRowType.type || 'standard'}
-              onChange={(e) => handleRowTypeChange(e.target.value)}
-              className="w-full border p-1"
-            >
+            <select value={currentRowType.type || 'standard'} onChange={(e) => handleRowTypeChange(e.target.value)} className="w-full border p-1">
               <option value="standard">Estándar</option>
               <option value="header">Encabezado</option>
               <option value="footer">Pie</option>
@@ -142,11 +138,7 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
           </div>
           <div className="mb-3">
             <label className="block mb-1">Fuente</label>
-            <select
-              value={currentStyle.fontFamily || ''}
-              onChange={(e) => updateStyle('fontFamily', e.target.value)}
-              className="w-full border p-1"
-            >
+            <select value={currentStyle.fontFamily || ''} onChange={(e) => updateStyle('fontFamily', e.target.value)} className="w-full border p-1">
               <option value="">Por defecto</option>
               <option value="Arial">Arial</option>
               <option value="Roboto">Roboto</option>
@@ -157,29 +149,34 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
           </div>
           <div className="mb-3">
             <label className="block mb-1">Tamaño de texto (px)</label>
-            <input
-              type="number"
-              value={parseInt(currentStyle.fontSize) || ''}
-              onChange={(e) => updateStyle('fontSize', `${e.target.value}px`)}
-              className="w-full border p-1"
-            />
+            <input type="number" value={parseInt(currentStyle.fontSize) || ''} onChange={(e) => updateStyle('fontSize', `${e.target.value}px`)} className="w-full border p-1" />
+          </div>
+          <div className="mb-3">
+            <label className="block mb-1">Color de texto</label>
+            <input type="color" value={currentStyle.fontColor || '#000000'} onChange={(e) => handleFontColorChange(e.target.value)} className="w-full h-8" />
           </div>
           <div className="mb-3">
             <label className="block mb-1">Color de fondo</label>
-            <input
-              type="color"
-              value={currentStyle.bgColor || '#ffffff'}
-              onChange={(e) => handleColorChange(e.target.value)}
-              className="w-full h-8"
-            />
+            <input type="color" value={currentStyle.bgColor || '#ffffff'} onChange={(e) => handleColorChange(e.target.value)} className="w-full h-8" />
+          </div>
+          <div className="mb-3">
+            <label className="block mb-1">Estilos de texto</label>
+            <label className="flex items-center mb-1">
+              <input type="checkbox" checked={currentStyle.fontWeight === 'bold'} onChange={(e) => updateStyle('fontWeight', e.target.checked ? 'bold' : 'normal')} className="mr-2" />
+              Negrita
+            </label>
+            <label className="flex items-center mb-1">
+              <input type="checkbox" checked={currentStyle.fontStyle === 'italic'} onChange={(e) => updateStyle('fontStyle', e.target.checked ? 'italic' : 'normal')} className="mr-2" />
+              Cursiva
+            </label>
+            <label className="flex items-center mb-1">
+              <input type="checkbox" checked={currentStyle.textDecoration === 'underline'} onChange={(e) => updateStyle('textDecoration', e.target.checked ? 'underline' : 'none')} className="mr-2" />
+              Subrayado
+            </label>
           </div>
           <div className="mb-3">
             <label className="block mb-1">Alineación horizontal</label>
-            <select
-              value={currentRowType.hAlign || 'left'}
-              onChange={(e) => handleAlignChange('hAlign', e.target.value)}
-              className="w-full border p-1"
-            >
+            <select value={currentRowType.hAlign || 'left'} onChange={(e) => handleAlignChange('hAlign', e.target.value)} className="w-full border p-1">
               <option value="left">Izquierda</option>
               <option value="center">Centro</option>
               <option value="right">Derecha</option>
@@ -187,11 +184,7 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
           </div>
           <div className="mb-3">
             <label className="block mb-1">Alineación vertical</label>
-            <select
-              value={currentRowType.vAlign || 'top'}
-              onChange={(e) => handleAlignChange('vAlign', e.target.value)}
-              className="w-full border p-1"
-            >
+            <select value={currentRowType.vAlign || 'top'} onChange={(e) => handleAlignChange('vAlign', e.target.value)} className="w-full border p-1">
               <option value="top">Arriba</option>
               <option value="middle">Centro</option>
               <option value="bottom">Abajo</option>
@@ -199,21 +192,11 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
           </div>
           <div className="mb-3">
             <label className="block mb-1">Ancho ({unit})</label>
-            <input
-              type="number"
-              placeholder="Ancho"
-              onChange={(e) => handleResize('width', e.target.value)}
-              className="w-full border p-1"
-            />
+            <input type="number" placeholder="Ancho" onChange={(e) => handleResize('width', e.target.value)} className="w-full border p-1" />
           </div>
           <div className="mb-3">
             <label className="block mb-1">Alto ({unit})</label>
-            <input
-              type="number"
-              placeholder="Alto"
-              onChange={(e) => handleResize('height', e.target.value)}
-              className="w-full border p-1"
-            />
+            <input type="number" placeholder="Alto" onChange={(e) => handleResize('height', e.target.value)} className="w-full border p-1" />
           </div>
         </div>
       </div>

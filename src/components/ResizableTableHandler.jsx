@@ -68,6 +68,10 @@ const ResizableTableHandler = ({ el, selected, setSelected, elements, setElement
                       verticalAlign: rowMeta.vAlign || 'top',
                       fontFamily: style.fontFamily || 'inherit',
                       fontSize: style.fontSize || 'inherit',
+                      fontWeight: style.fontWeight || 'normal',
+                      fontStyle: style.fontStyle || 'normal',
+                      textDecoration: style.textDecoration || 'none',
+                      color: style.fontColor || 'inherit',
                       padding: '4px',
                       position: 'relative'
                     }}
