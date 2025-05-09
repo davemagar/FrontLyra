@@ -1,5 +1,7 @@
-
 import React from 'react';
+
+const MAX_WIDTH = 800;
+const MAX_HEIGHT = 400;
 
 const ResizableTableHandler = ({ el, selected, setSelected, elements, setElements, onDoubleClick }) => {
   const handleMouseDown = (e, rowIdx, colIdx, direction) => {
@@ -13,25 +15,39 @@ const ResizableTableHandler = ({ el, selected, setSelected, elements, setElement
       const dx = moveEvent.clientX - startX;
       const dy = moveEvent.clientY - startY;
 
-      setElements(prev =>
-        prev.map(item => {
-          if (item.id === el.id) {
+      requestAnimationFrame(() => {
+        setElements(prev =>
+          prev.map(item => {
+            if (item.id !== el.id) return item;
+
             const updated = { ...item };
             updated.styles = updated.styles || {};
             updated.styles[rowIdx] = updated.styles[rowIdx] || {};
             updated.styles[rowIdx][colIdx] = updated.styles[rowIdx][colIdx] || {};
 
+            const style = updated.styles[rowIdx][colIdx];
+
+            const currentWidth = parseInt(style.width || 100);
+            const currentHeight = parseInt(style.height || 40);
+
             if (direction === 'width') {
-              updated.styles[rowIdx][colIdx].width = `${(parseInt(updated.styles[rowIdx][colIdx].width || 100) + dx)}px`;
-            } else {
-              updated.styles[rowIdx][colIdx].height = `${(parseInt(updated.styles[rowIdx][colIdx].height || 40) + dy)}px`;
+              const next = Math.min(MAX_WIDTH, Math.max(40, currentWidth + dx * 0.1));
+              style.width = `${next}px`;
+            } else if (direction === 'height') {
+              const next = Math.min(MAX_HEIGHT, Math.max(20, currentHeight + dy * 0.1));
+              style.height = `${next}px`;
+            } else if (direction === 'left') {
+              const next = Math.min(MAX_WIDTH, Math.max(40, currentWidth - dx * 0.1));
+              style.width = `${next}px`;
+            } else if (direction === 'top') {
+              const next = Math.min(MAX_HEIGHT, Math.max(20, currentHeight - dy * 0.1));
+              style.height = `${next}px`;
             }
 
             return updated;
-          }
-          return item;
-        })
-      );
+          })
+        );
+      });
     };
 
     const onMouseUp = () => {
@@ -84,6 +100,14 @@ const ResizableTableHandler = ({ el, selected, setSelected, elements, setElement
                     <div
                       onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'height')}
                       className="absolute bottom-0 left-0 h-1 w-full cursor-row-resize bg-blue-500 opacity-0 group-hover:opacity-100"
+                    />
+                    <div
+                      onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'left')}
+                      className="absolute top-0 left-0 w-1 h-full cursor-col-resize bg-blue-500 opacity-0 group-hover:opacity-100"
+                    />
+                    <div
+                      onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'top')}
+                      className="absolute top-0 left-0 h-1 w-full cursor-row-resize bg-blue-500 opacity-0 group-hover:opacity-100"
                     />
                   </td>
                 );

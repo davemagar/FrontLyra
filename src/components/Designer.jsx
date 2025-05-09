@@ -1,6 +1,6 @@
-
 import { useState } from 'react';
 import ResizableTable from '../components/ResizableTable';
+import ResizableTableHandler from '../components/ResizableTableHandler';
 
 const Designer = () => {
   const [elements, setElements] = useState([]);
@@ -15,6 +15,7 @@ const Designer = () => {
       y: 100,
       rows: [['Celda 1', 'Celda 2']],
       columns: 2,
+      styles: { 0: { 0: {}, 1: {} } }
     };
     setElements([...elements, newTable]);
   };
@@ -36,7 +37,9 @@ const Designer = () => {
   return (
     <div className="flex h-screen">
       <div className="w-16 bg-white border-r p-2">
-        <button onClick={addTable} className="w-full mb-2 bg-gray-100 py-1 px-2 rounded border hover:bg-gray-200 text-xs">➕ Tabla</button>
+        <button onClick={addTable} className="w-full mb-2 bg-gray-100 py-1 px-2 rounded border hover:bg-gray-200 text-xs">
+          ➕ Tabla
+        </button>
       </div>
 
       <div className="flex-1 relative bg-[#fdf7e3] border-x">
@@ -49,7 +52,19 @@ const Designer = () => {
             draggable
           >
             {el.type === 'table' && (
-              <ResizableTable tableData={el} onUpdate={(data) => updateTable(el.id, data)} />
+              <>
+                <ResizableTable tableData={el} onUpdate={(data) => updateTable(el.id, data)} />
+                {selected === el.id && (
+                  <ResizableTableHandler
+                    el={el}
+                    selected={[{ row: 0, col: 0 }]} // simulación de celda seleccionada para que aparezcan handlers
+                    setSelected={setSelected}
+                    elements={elements}
+                    setElements={setElements}
+                    onDoubleClick={() => {}}
+                  />
+                )}
+              </>
             )}
           </div>
         ))}
@@ -61,7 +76,7 @@ const Designer = () => {
         {selected && (
           <div className="text-xs">
             <p>Tabla seleccionada: #{selected}</p>
-            <p className="mt-2 text-gray-500">Puedes redimensionar columnas arrastrando desde el borde.</p>
+            <p className="mt-2 text-gray-500">Puedes redimensionar arrastrando desde los bordes.</p>
           </div>
         )}
       </div>
