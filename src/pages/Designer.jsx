@@ -1,14 +1,23 @@
-
 import { useState } from 'react';
 import ResizableTableHandler from '../components/ResizableTableHandler';
 import WelcomeWizard from '../components/WelcomeWizard';
 import TablaEditorModal from '../components/TablaEditorModal';
+import PageCanvas from '../components/PageCanvas';  // 🔥 Agregado
 import templates from '../data/templates';
 
 const Designer = () => {
+
+  const getCurrentTemplate = () => {
+    return {
+      pageSize,
+      elements
+    };
+  };
+
   const [elements, setElements] = useState([]);
   const [selected, setSelected] = useState(null);
   const [showWizard, setShowWizard] = useState(true);
+  const [pageSize, setPageSize] = useState("A4");  // 🔥 Agregado
 
   const addElement = (type, content = '') => {
     const id = Date.now();
@@ -66,10 +75,13 @@ const Designer = () => {
     setShowWizard(false);
   };
 
+  
   const handleTemplateSelect = (template) => {
-    setElements(template);
+    setElements(template.elements || []);
+    setPageSize(template.pageSize || "A4");
     setShowWizard(false);
   };
+
 
   const handleSaveTable = (updatedTable) => {
     setElements(prev =>
@@ -114,39 +126,51 @@ const Designer = () => {
         <button onClick={() => addElement('table')} title="Agregar tabla" className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full text-lg">📊</button>
       </div>
 
-      <div className="flex-1 relative bg-[#fdf7e3] border-x" onDragOver={e => e.preventDefault()} onDrop={e => {
-        const variable = e.dataTransfer.getData('text/plain');
-        if (variable) {
-          addElement('variable', `{{${variable}}}`);
-        }
-      }}>
-        {elements.map(el => (
-          el.type === 'table'
-            ? <ResizableTableHandler key={el.id} el={el} selected={selected} setSelected={setSelected} elements={elements} setElements={setElements} onDoubleClick={triggerEditor} />
-            : <div
-                key={el.id}
-                onClick={() => setSelected(el.id)}
-                style={{
-                  position: 'absolute',
-                  left: el.x,
-                  top: el.y,
-                  cursor: 'move',
-                  fontSize: el.size === 'small' ? '12px' : el.size === 'large' ? '24px' : '16px',
-                  border: selected === el.id ? '1px dashed #000' : 'none',
-                  padding: '4px',
-                  backgroundColor: el.type !== 'image' ? 'transparent' : 'none'
-                }}
-                draggable
-                onDragEnd={(e) => handleDrag(e, el.id)}
-                contentEditable={el.type !== 'image'}
-                suppressContentEditableWarning
-                onBlur={(e) => updateContent(e.target.innerText)}
-              >
-                {el.type === 'image'
-                  ? <img src={el.content || 'https://via.placeholder.com/100'} className="w-24 h-auto" alt="img" />
-                  : el.content}
-              </div>
-        ))}
+      <div className="flex-1 relative bg-[#fdf7e3] border-x p-4 overflow-auto">
+        {elements.length > 0 && (
+          <div className="flex justify-end mb-2">
+            <label className="mr-2 font-semibold">Tamaño de hoja:</label>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(e.target.value)}
+              className="border border-gray-300 p-1 rounded"
+            >
+              <option value="A4">A4</option>
+              <option value="Carta">Carta</option>
+              <option value="Legal">Legal</option>
+            </select>
+          </div>
+        )}
+
+        <PageCanvas pageSize={pageSize}>
+          {elements.map(el => (
+            el.type === 'table'
+              ? <ResizableTableHandler key={el.id} el={el} selected={selected} setSelected={setSelected} elements={elements} setElements={setElements} onDoubleClick={triggerEditor} />
+              : <div
+                  key={el.id}
+                  onClick={() => setSelected(el.id)}
+                  style={{
+                    position: 'absolute',
+                    left: el.x,
+                    top: el.y,
+                    cursor: 'move',
+                    fontSize: el.size === 'small' ? '12px' : el.size === 'large' ? '24px' : '16px',
+                    border: selected === el.id ? '1px dashed #000' : 'none',
+                    padding: '4px',
+                    backgroundColor: el.type !== 'image' ? 'transparent' : 'none'
+                  }}
+                  draggable
+                  onDragEnd={(e) => handleDrag(e, el.id)}
+                  contentEditable={el.type !== 'image'}
+                  suppressContentEditableWarning
+                  onBlur={(e) => updateContent(e.target.innerText)}
+                >
+                  {el.type === 'image'
+                    ? <img src={el.content || 'https://via.placeholder.com/100'} className="w-24 h-auto" alt="img" />
+                    : el.content}
+                </div>
+          ))}
+        </PageCanvas>
       </div>
 
       <div className="w-72 p-4 bg-white shadow-sm text-sm text-gray-700">

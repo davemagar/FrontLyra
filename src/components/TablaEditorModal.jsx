@@ -1,24 +1,10 @@
+
 import { useState } from 'react';
 
 const TablaEditorModal = ({ tableData, onSave, onClose }) => {
   const [localTable, setLocalTable] = useState(tableData);
   const [unit, setUnit] = useState('cm');
-  const [selectedCells, setSelectedCells] = useState([{ row: 0, col: 0 }]);
-
-  const isCellSelected = (row, col) =>
-    selectedCells.some(cell => cell.row === row && cell.col === col);
-
-  const toggleCellSelection = (row, col, ctrlKey) => {
-    if (ctrlKey) {
-      setSelectedCells(prev =>
-        isCellSelected(row, col)
-          ? prev.filter(cell => !(cell.row === row && cell.col === col))
-          : [...prev, { row, col }]
-      );
-    } else {
-      setSelectedCells([{ row, col }]);
-    }
-  };
+  const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 });
 
   const handleChange = (rowIndex, colIndex, value) => {
     const updated = [...localTable.rows];
@@ -37,20 +23,16 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
   };
 
   const getCurrentStyle = () => {
-    if (selectedCells.length === 1) {
-      const { row, col } = selectedCells[0];
-      return localTable.styles?.[row]?.[col] || {};
-    }
-    return {};
+    const { row, col } = selectedCell;
+    return localTable.styles?.[row]?.[col] || {};
   };
 
   const updateStyle = (property, value) => {
+    const { row, col } = selectedCell;
     const newStyles = { ...localTable.styles };
-    selectedCells.forEach(({ row, col }) => {
-      if (!newStyles[row]) newStyles[row] = {};
-      if (!newStyles[row][col]) newStyles[row][col] = {};
-      newStyles[row][col][property] = value;
-    });
+    if (!newStyles[row]) newStyles[row] = {};
+    if (!newStyles[row][col]) newStyles[row][col] = {};
+    newStyles[row][col][property] = value;
     setLocalTable({ ...localTable, styles: newStyles });
   };
 
@@ -62,23 +44,31 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
   };
 
   const handleRowTypeChange = (type) => {
-    selectedCells.forEach(({ row }) => {
-      const updated = { ...localTable.rowTypes } || {};
-      if (!updated[row]) updated[row] = {};
-      updated[row].type = type;
-      setLocalTable({ ...localTable, rowTypes: updated });
-    });
+    const { row } = selectedCell;
+    const updated = { ...localTable.rowTypes } || {};
+    if (!updated[row]) updated[row] = {};
+    updated[row].type = type;
+    setLocalTable({ ...localTable, rowTypes: updated });
   };
 
   const handleAlignChange = (alignType, value) => {
-    updateStyle(alignType, value);
+    const { row } = selectedCell;
+    const updated = { ...localTable.rowTypes } || {};
+    if (!updated[row]) updated[row] = {};
+    updated[row][alignType] = value;
+    setLocalTable({ ...localTable, rowTypes: updated });
   };
 
-  const handleColorChange = (color) => updateStyle('bgColor', color);
-  const handleFontColorChange = (color) => updateStyle('fontColor', color);
+  const handleColorChange = (color) => {
+    updateStyle('bgColor', color);
+  };
+
+  const handleFontColorChange = (color) => {
+    updateStyle('fontColor', color);
+  };
 
   const currentStyle = getCurrentStyle();
-  const currentRowType = localTable.rowTypes?.[selectedCells[0]?.row] || {};
+  const currentRowType = localTable.rowTypes?.[selectedCell.row] || {};
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 overflow-y-auto">
@@ -97,12 +87,12 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
                 <tr key={rowIdx}>
                   {row.map((cell, colIdx) => {
                     const style = localTable.styles?.[rowIdx]?.[colIdx] || {};
-                    const isSelected = isCellSelected(rowIdx, colIdx);
+                    const isSelected = selectedCell.row === rowIdx && selectedCell.col === colIdx;
                     return (
                       <td
                         key={colIdx}
                         className={`border p-1 align-top ${isSelected ? 'ring-2 ring-blue-400' : ''}`}
-                        onClick={(e) => toggleCellSelection(rowIdx, colIdx, e.ctrlKey)}
+                        onClick={() => setSelectedCell({ row: rowIdx, col: colIdx })}
                         style={{ backgroundColor: style.bgColor || 'transparent' }}
                       >
                         <textarea
@@ -136,7 +126,7 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
         </div>
 
         <div className="w-64 border-l pl-4 text-sm">
-          <h3 className="font-semibold mb-2">Celdas seleccionadas</h3>
+          <h3 className="font-semibold mb-2">Celda seleccionada</h3>
           <div className="mb-3">
             <label className="block mb-1">Tipo de fila</label>
             <select value={currentRowType.type || 'standard'} onChange={(e) => handleRowTypeChange(e.target.value)} className="w-full border p-1">
