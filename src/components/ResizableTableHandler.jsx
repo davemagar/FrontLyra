@@ -1,8 +1,5 @@
 import React from 'react';
 
-const MAX_WIDTH = 800;
-const MAX_HEIGHT = 400;
-
 const ResizableTableHandler = ({ el, selected, setSelected, elements, setElements, onDoubleClick }) => {
   const handleMouseDown = (e, rowIdx, colIdx, direction) => {
     e.stopPropagation();
@@ -11,43 +8,47 @@ const ResizableTableHandler = ({ el, selected, setSelected, elements, setElement
     const startX = e.clientX;
     const startY = e.clientY;
 
+    const item = elements.find(item => item.id === el.id);
+    const style = item.styles?.[rowIdx]?.[colIdx] || {};
+    const initialWidth = parseInt(style.width || 100);
+    const initialHeight = parseInt(style.height || 40);
+    const initialX = item.x;
+    const initialY = item.y;
+
     const onMouseMove = (moveEvent) => {
       const dx = moveEvent.clientX - startX;
       const dy = moveEvent.clientY - startY;
 
-      requestAnimationFrame(() => {
-        setElements(prev =>
-          prev.map(item => {
-            if (item.id !== el.id) return item;
+      setElements(prev =>
+        prev.map(item => {
+          if (item.id !== el.id) return item;
 
-            const updated = { ...item };
-            updated.styles = updated.styles || {};
-            updated.styles[rowIdx] = updated.styles[rowIdx] || {};
-            updated.styles[rowIdx][colIdx] = updated.styles[rowIdx][colIdx] || {};
+          const updated = { ...item };
+          updated.styles = updated.styles || {};
+          updated.styles[rowIdx] = updated.styles[rowIdx] || {};
+          updated.styles[rowIdx][colIdx] = updated.styles[rowIdx][colIdx] || {};
 
-            const style = updated.styles[rowIdx][colIdx];
+          if (direction === 'width-right') {
+            updated.styles[rowIdx][colIdx].width = `${Math.max(40, initialWidth + dx)}px`;
+          }
 
-            const currentWidth = parseInt(style.width || 100);
-            const currentHeight = parseInt(style.height || 40);
+          if (direction === 'width-left') {
+            updated.styles[rowIdx][colIdx].width = `${Math.max(40, initialWidth - dx)}px`;
+            updated.x = Math.max(0, initialX + dx);
+          }
 
-            if (direction === 'width') {
-              const next = Math.min(MAX_WIDTH, Math.max(40, currentWidth + dx * 0.1));
-              style.width = `${next}px`;
-            } else if (direction === 'height') {
-              const next = Math.min(MAX_HEIGHT, Math.max(20, currentHeight + dy * 0.1));
-              style.height = `${next}px`;
-            } else if (direction === 'left') {
-              const next = Math.min(MAX_WIDTH, Math.max(40, currentWidth - dx * 0.1));
-              style.width = `${next}px`;
-            } else if (direction === 'top') {
-              const next = Math.min(MAX_HEIGHT, Math.max(20, currentHeight - dy * 0.1));
-              style.height = `${next}px`;
-            }
+          if (direction === 'height-bottom') {
+            updated.styles[rowIdx][colIdx].height = `${Math.max(20, initialHeight + dy)}px`;
+          }
 
-            return updated;
-          })
-        );
-      });
+          if (direction === 'height-top') {
+            updated.styles[rowIdx][colIdx].height = `${Math.max(20, initialHeight - dy)}px`;
+            updated.y = Math.max(0, initialY + dy);
+          }
+
+          return updated;
+        })
+      );
     };
 
     const onMouseUp = () => {
@@ -80,6 +81,7 @@ const ResizableTableHandler = ({ el, selected, setSelected, elements, setElement
                       width: style.width || '100px',
                       height: style.height || '40px',
                       backgroundColor: style.bgColor || 'transparent',
+                      color: style.fontColor || 'inherit',
                       textAlign: rowMeta.hAlign || 'left',
                       verticalAlign: rowMeta.vAlign || 'top',
                       fontFamily: style.fontFamily || 'inherit',
@@ -87,26 +89,29 @@ const ResizableTableHandler = ({ el, selected, setSelected, elements, setElement
                       fontWeight: style.fontWeight || 'normal',
                       fontStyle: style.fontStyle || 'normal',
                       textDecoration: style.textDecoration || 'none',
-                      color: style.fontColor || 'inherit',
                       padding: '4px',
                       position: 'relative'
                     }}
                   >
                     {cell}
+                    {/* Right */}
                     <div
-                      onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'width')}
+                      onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'width-right')}
                       className="absolute top-0 right-0 w-1 h-full cursor-col-resize bg-blue-500 opacity-0 group-hover:opacity-100"
                     />
+                    {/* Left */}
                     <div
-                      onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'height')}
-                      className="absolute bottom-0 left-0 h-1 w-full cursor-row-resize bg-blue-500 opacity-0 group-hover:opacity-100"
-                    />
-                    <div
-                      onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'left')}
+                      onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'width-left')}
                       className="absolute top-0 left-0 w-1 h-full cursor-col-resize bg-blue-500 opacity-0 group-hover:opacity-100"
                     />
+                    {/* Bottom */}
                     <div
-                      onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'top')}
+                      onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'height-bottom')}
+                      className="absolute bottom-0 left-0 h-1 w-full cursor-row-resize bg-blue-500 opacity-0 group-hover:opacity-100"
+                    />
+                    {/* Top */}
+                    <div
+                      onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'height-top')}
                       className="absolute top-0 left-0 h-1 w-full cursor-row-resize bg-blue-500 opacity-0 group-hover:opacity-100"
                     />
                   </td>
