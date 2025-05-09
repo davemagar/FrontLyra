@@ -60,11 +60,29 @@ const ResizableTableHandler = ({ el, selected, setSelected, elements, setElement
     document.addEventListener('mouseup', onMouseUp);
   };
 
+  const handleCellClick = (e, rowIdx, colIdx) => {
+    e.stopPropagation();
+    if (e.ctrlKey || e.metaKey) {
+      setSelected(prev => {
+        const exists = prev?.some(sel => sel.row === rowIdx && sel.col === colIdx);
+        if (exists) {
+          return prev.filter(sel => !(sel.row === rowIdx && sel.col === colIdx));
+        } else {
+          return [...(prev || []), { row: rowIdx, col: colIdx }];
+        }
+      });
+    } else {
+      setSelected([{ row: rowIdx, col: colIdx }]);
+    }
+  };
+
+  const isSelected = (rowIdx, colIdx) =>
+    selected?.some(sel => sel.row === rowIdx && sel.col === colIdx);
+
   return (
     <div
-      style={{ position: 'absolute', top: el.y, left: el.x, zIndex: selected === el.id ? 10 : 1 }}
-      onClick={() => setSelected(el.id)}
-      onDoubleClick={() => onDoubleClick(el.id)}
+      style={{ position: 'absolute', top: el.y, left: el.x, zIndex: 10 }}
+      onClick={() => setSelected([])} onDoubleClick={() => onDoubleClick(el.id)}
     >
       <table className="border border-black bg-white">
         <tbody>
@@ -73,17 +91,22 @@ const ResizableTableHandler = ({ el, selected, setSelected, elements, setElement
               {row.map((cell, colIdx) => {
                 const style = el.styles?.[rowIdx]?.[colIdx] || {};
                 const rowMeta = el.rowTypes?.[rowIdx] || {};
+                const selectedClass = isSelected(rowIdx, colIdx)
+                  ? 'ring ring-yellow-400'
+                  : '';
+
                 return (
                   <td
                     key={colIdx}
-                    className="border border-gray-300 relative group"
+                    onClick={(e) => handleCellClick(e, rowIdx, colIdx)}
+                    className={`border border-gray-300 relative group ${selectedClass}`}
                     style={{
                       width: style.width || '100px',
                       height: style.height || '40px',
                       backgroundColor: style.bgColor || 'transparent',
                       color: style.fontColor || 'inherit',
-                      textAlign: rowMeta.hAlign || 'left',
-                      verticalAlign: rowMeta.vAlign || 'top',
+                      textAlign: rowMeta.hAlign || style.hAlign || 'left',
+                      verticalAlign: rowMeta.vAlign || style.vAlign || 'top',
                       fontFamily: style.fontFamily || 'inherit',
                       fontSize: style.fontSize || 'inherit',
                       fontWeight: style.fontWeight || 'normal',
@@ -94,22 +117,18 @@ const ResizableTableHandler = ({ el, selected, setSelected, elements, setElement
                     }}
                   >
                     {cell}
-                    {/* Right */}
                     <div
                       onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'width-right')}
                       className="absolute top-0 right-0 w-1 h-full cursor-col-resize bg-blue-500 opacity-0 group-hover:opacity-100"
                     />
-                    {/* Left */}
                     <div
                       onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'width-left')}
                       className="absolute top-0 left-0 w-1 h-full cursor-col-resize bg-blue-500 opacity-0 group-hover:opacity-100"
                     />
-                    {/* Bottom */}
                     <div
                       onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'height-bottom')}
                       className="absolute bottom-0 left-0 h-1 w-full cursor-row-resize bg-blue-500 opacity-0 group-hover:opacity-100"
                     />
-                    {/* Top */}
                     <div
                       onMouseDown={(e) => handleMouseDown(e, rowIdx, colIdx, 'height-top')}
                       className="absolute top-0 left-0 h-1 w-full cursor-row-resize bg-blue-500 opacity-0 group-hover:opacity-100"
