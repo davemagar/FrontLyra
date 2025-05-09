@@ -71,12 +71,7 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
   };
 
   const handleAlignChange = (alignType, value) => {
-    selectedCells.forEach(({ row }) => {
-      const updated = { ...localTable.rowTypes } || {};
-      if (!updated[row]) updated[row] = {};
-      updated[row][alignType] = value;
-      setLocalTable({ ...localTable, rowTypes: updated });
-    });
+    updateStyle(alignType, value);
   };
 
   const handleColorChange = (color) => updateStyle('bgColor', color);
