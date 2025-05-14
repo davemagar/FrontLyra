@@ -198,6 +198,42 @@ const TablaEditorModal = ({ tableData, onSave, onClose }) => {
             <label className="block mb-1">Alto ({unit})</label>
             <input type="number" placeholder="Alto" onChange={(e) => handleResize('height', e.target.value)} className="w-full border p-1" />
           </div>
+          <div className="mb-4">
+  <h4 className="font-semibold mb-2">Bordes por lado</h4>
+  {['Top', 'Right', 'Bottom', 'Left'].map((side) => (
+    <div key={side} className="mb-3">
+      <label className="block font-medium">{`Borde ${side}`}</label>
+      <div className="flex gap-2 mt-1">
+        <input
+          type="color"
+          value={currentStyle[`border${side}Color`] || '#000000'}
+          onChange={(e) => updateStyle(`border${side}Color`, e.target.value)}
+          className="w-10 h-8"
+        />
+        <select
+          value={currentStyle[`border${side}Style`] || 'solid'}
+          onChange={(e) => updateStyle(`border${side}Style`, e.target.value)}
+          className="flex-1 border p-1"
+        >
+          <option value="solid">Sólido</option>
+          <option value="dashed">Guiones</option>
+          <option value="dotted">Punteado</option>
+          <option value="double">Doble</option>
+          <option value="none">Sin borde</option>
+        </select>
+        <input
+          type="number"
+          min="0"
+          placeholder="px"
+          value={parseInt(currentStyle[`border${side}Width`] || 1)}
+          onChange={(e) => updateStyle(`border${side}Width`, `${e.target.value}px`)}
+          className="w-16 border p-1"
+        />
+      </div>
+    </div>
+  ))}
+</div>
+
         </div>
       </div>
     </div>

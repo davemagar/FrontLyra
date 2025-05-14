@@ -99,7 +99,7 @@ const ResizableTableHandler = ({ el, selected, setSelected, elements, setElement
                   <td
                     key={colIdx}
                     onClick={(e) => handleCellClick(e, rowIdx, colIdx)}
-                    className={`border border-gray-300 relative group ${selectedClass}`}
+                    className={`relative group ${selectedClass}`}
                     style={{
                       width: style.width || '100px',
                       height: style.height || '40px',
@@ -113,8 +113,27 @@ const ResizableTableHandler = ({ el, selected, setSelected, elements, setElement
                       fontStyle: style.fontStyle || 'normal',
                       textDecoration: style.textDecoration || 'none',
                       padding: '4px',
-                      position: 'relative'
+                      position: 'relative',
+                    
+                      // 👇 Bordes individuales
+                      borderTop: style.borderTopStyle === 'none'
+                        ? 'none'
+                        : `${style.borderTopWidth || '1px'} ${style.borderTopStyle || 'solid'} ${style.borderTopColor || '#000'}`,
+                    
+                      borderRight: style.borderRightStyle === 'none'
+                        ? 'none'
+                        : `${style.borderRightWidth || '1px'} ${style.borderRightStyle || 'solid'} ${style.borderRightColor || '#000'}`,
+                    
+                      borderBottom: style.borderBottomStyle === 'none'
+                        ? 'none'
+                        : `${style.borderBottomWidth || '1px'} ${style.borderBottomStyle || 'solid'} ${style.borderBottomColor || '#000'}`,
+                    
+                      borderLeft: style.borderLeftStyle === 'none'
+                        ? 'none'
+                        : `${style.borderLeftWidth || '1px'} ${style.borderLeftStyle || 'solid'} ${style.borderLeftColor || '#000'}`
                     }}
+                    
+                    
                   >
                     {cell}
                     <div
